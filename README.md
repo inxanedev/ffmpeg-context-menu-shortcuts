@@ -11,7 +11,7 @@ The tool adds (or removes) two entries to the right-click menu of common video f
 
 | Menu entry | Action |
 | --- | --- |
-| **inx: compress video** | Re-encodes with `libx264` (CRF 24, preset `medium`) + AAC 128k into `<name>-compressed.mp4` in the same folder. |
+| **inx: compress video** | Re-encodes with `libx264` (CRF 24 by default, preset `medium`) + AAC 128k into `<name>-compressed.mp4` in the same folder. |
 | **inx: extract audio** | Extracts the audio track to MP3 (`libmp3lame`, VBR `-q:a 2`) into `<name>-audioextracted.mp3` in the same folder. |
 
 Both output files are written next to the original video with the suffix `-compressed` or
@@ -60,6 +60,18 @@ A console window shown during processing displays ffmpeg's progress.
 
 1. Make sure ffmpeg is in your `PATH`.
 2. Run `ffmpeg_context_menu.py`.
-3. Tick the tweaks you want.
+3. On the **Tweaks** tab, tick the tweaks you want.
 4. Right-click a video file and choose **inx: compress video** or **inx: extract audio**.
 5. To undo, untick the tweaks (or use the **Refresh** button to re-read the current state).
+
+## Settings
+
+The **Settings** tab has a slider for the compression **CRF** value used by
+"inx: compress video", clamped to a practical range of **18–32** (default **24**):
+
+- Lower CRF → better quality, larger files.
+- Higher CRF → smaller files, more visible quality loss.
+
+The value is saved to `settings.json` next to the script and is read each time the
+"compress video" shortcut runs, so changes take effect immediately — no need to re-toggle.
+
