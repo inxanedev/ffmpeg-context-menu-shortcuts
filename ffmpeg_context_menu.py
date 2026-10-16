@@ -14,6 +14,19 @@ CRF_MIN, CRF_MAX, CRF_DEFAULT = 18, 32, 24
 
 DEFAULT_SETTINGS = {"crf": CRF_DEFAULT}
 
+P = {
+    "bg": "#1e1e1e",
+    "surface": "#252526",
+    "surface_alt": "#2d2d30",
+    "fg": "#e6e6e6",
+    "muted": "#9aa0a6",
+    "accent": "#4c8bf5",
+    "accent_active": "#6ea1f7",
+    "border": "#3a3a3a",
+    "good": "#5cc46c",
+    "bad": "#ff6b6b",
+}
+
 VIDEO_EXTENSIONS = [
     ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv",
     ".webm", ".m4v", ".mpg", ".mpeg", ".3gp", ".ts",
@@ -174,8 +187,79 @@ class App(tk.Tk):
         self.resizable(False, False)
         self._busy = False
         self.vars = {}
+        self._apply_theme()
         self._build()
         self.refresh()
+
+    def _apply_theme(self):
+        self.configure(bg=P["bg"])
+        style = ttk.Style(self)
+        style.theme_use("clam")
+
+        style.configure(
+            ".",
+            background=P["bg"],
+            foreground=P["fg"],
+            fieldbackground=P["surface"],
+            bordercolor=P["border"],
+            focuscolor=P["accent"],
+            font=("Segoe UI", 9),
+        )
+        style.configure("TFrame", background=P["bg"])
+        style.configure("TLabel", background=P["bg"], foreground=P["fg"])
+        style.configure("Heading.TLabel", font=("Segoe UI", 12, "bold"))
+        style.configure("Sub.TLabel", font=("Segoe UI", 9, "bold"))
+        style.configure("Muted.TLabel", foreground=P["muted"])
+
+        style.configure("TCheckbutton", background=P["bg"], foreground=P["fg"])
+        style.map(
+            "TCheckbutton",
+            background=[("active", P["bg"])],
+            foreground=[("disabled", P["muted"])],
+            indicatorcolor=[("selected", P["accent"]), ("!selected", P["surface_alt"])],
+        )
+
+        style.configure(
+            "TButton",
+            background=P["surface_alt"],
+            foreground=P["fg"],
+            borderwidth=0,
+            focusthickness=0,
+            padding=(12, 6),
+            relief="flat",
+        )
+        style.map(
+            "TButton",
+            background=[("pressed", P["accent_active"]), ("active", P["accent"])],
+            foreground=[("active", "#ffffff")],
+        )
+
+        style.configure(
+            "TNotebook", background=P["bg"], borderwidth=0, tabmargins=(0, 4, 0, 0)
+        )
+        style.configure(
+            "TNotebook.Tab",
+            background=P["surface"],
+            foreground=P["muted"],
+            padding=(14, 7),
+            borderwidth=0,
+        )
+        style.map(
+            "TNotebook.Tab",
+            background=[("selected", P["bg"])],
+            foreground=[("selected", P["fg"])],
+        )
+
+        style.configure(
+            "Horizontal.TScale",
+            background=P["bg"],
+            troughcolor=P["surface"],
+            bordercolor=P["border"],
+            lightcolor=P["accent"],
+            darkcolor=P["accent"],
+        )
+
+        style.configure("TSeparator", background=P["border"])
 
     def _build(self):
         self.settings = load_settings()
@@ -195,14 +279,14 @@ class App(tk.Tk):
         ttk.Label(
             main,
             text="Video file right-click menu tweaks",
-            font=("Segoe UI", 11, "bold"),
+            style="Heading.TLabel",
         ).grid(row=0, column=0, columnspan=2, sticky="w")
 
         ttk.Label(
             main,
             text="Toggle an option to add or remove it from the context menu.\n"
             "No admin rights needed (HKCU). ffmpeg must be in your PATH.",
-            foreground="#555",
+            style="Muted.TLabel",
             justify="left",
         ).grid(row=1, column=0, columnspan=2, sticky="w", pady=(4, 12))
 
@@ -218,11 +302,11 @@ class App(tk.Tk):
             )
             cb.grid(row=row, column=0, columnspan=2, sticky="w")
             ttk.Label(
-                main, text=tweak["desc"], foreground="#777"
+                main, text=tweak["desc"], style="Muted.TLabel"
             ).grid(row=row + 1, column=0, columnspan=2, sticky="w", padx=(22, 0))
             row += 2
 
-        self.status = ttk.Label(main, text="", foreground="#0a7d00")
+        self.status = ttk.Label(main, text="", foreground=P["good"])
         self.status.grid(row=row, column=0, sticky="w", pady=(12, 0))
         ttk.Button(main, text="Refresh", command=self.refresh).grid(
             row=row, column=1, sticky="e", pady=(12, 0)
@@ -231,7 +315,8 @@ class App(tk.Tk):
         link = tk.Label(
             main,
             text="made by inxanedev",
-            fg="#0a66c2",
+            fg=P["accent"],
+            bg=P["bg"],
             cursor="hand2",
             font=("Segoe UI", 8, "underline"),
         )
@@ -245,20 +330,20 @@ class App(tk.Tk):
         ttk.Label(
             parent,
             text="Compression settings",
-            font=("Segoe UI", 11, "bold"),
+            style="Heading.TLabel",
         ).grid(row=0, column=0, columnspan=2, sticky="w")
 
         ttk.Label(
             parent,
             text="Quality (CRF). Lower = better quality and larger files.\n"
             "Higher = smaller files with more quality loss.",
-            foreground="#555",
+            style="Muted.TLabel",
             justify="left",
         ).grid(row=1, column=0, columnspan=2, sticky="w", pady=(4, 12))
 
         self.crf_var = tk.IntVar(value=self.settings["crf"])
         self.crf_label = ttk.Label(
-            parent, text=f"CRF: {self.settings['crf']}", font=("Segoe UI", 9, "bold")
+            parent, text=f"CRF: {self.settings['crf']}", style="Sub.TLabel"
         )
         self.crf_label.grid(row=2, column=0, columnspan=2, sticky="w")
 
@@ -272,51 +357,60 @@ class App(tk.Tk):
             variable=self.crf_var,
             command=self._on_crf_change,
             showvalue=False,
+            bg=P["bg"],
+            fg=P["fg"],
+            troughcolor=P["surface"],
+            activebackground=P["accent"],
+            highlightthickness=0,
+            bd=0,
+            sliderrelief="flat",
         ).grid(row=3, column=0, columnspan=2, sticky="we", pady=(4, 2))
 
         ends = ttk.Frame(parent)
         ends.grid(row=4, column=0, columnspan=2, sticky="we")
-        ttk.Label(ends, text=f"{CRF_MIN} (better quality)", foreground="#777").pack(
+        ttk.Label(ends, text=f"{CRF_MIN} (better quality)", style="Muted.TLabel").pack(
             side="left"
         )
-        ttk.Label(ends, text=f"{CRF_MAX} (smaller)", foreground="#777").pack(side="right")
+        ttk.Label(ends, text=f"{CRF_MAX} (smaller)", style="Muted.TLabel").pack(
+            side="right"
+        )
 
         ttk.Label(
             parent,
             text="Applied to the \"inx: compress video\" shortcut.",
-            foreground="#777",
+            style="Muted.TLabel",
         ).grid(row=5, column=0, columnspan=2, sticky="w", pady=(10, 0))
 
         ttk.Separator(parent, orient="horizontal").grid(
             row=6, column=0, columnspan=2, sticky="we", pady=(16, 12)
         )
 
-        ttk.Label(
-            parent, text="Desktop shortcut", font=("Segoe UI", 9, "bold")
-        ).grid(row=7, column=0, columnspan=2, sticky="w")
+        ttk.Label(parent, text="Desktop shortcut", style="Sub.TLabel").grid(
+            row=7, column=0, columnspan=2, sticky="w"
+        )
 
         ttk.Label(
             parent,
             text="Add a shortcut to open this tool from your desktop.",
-            foreground="#777",
+            style="Muted.TLabel",
         ).grid(row=8, column=0, columnspan=2, sticky="w", pady=(2, 8))
 
         ttk.Button(
             parent, text="Create Desktop Shortcut", command=self._create_shortcut
         ).grid(row=9, column=0, columnspan=2, sticky="w")
 
-        self.shortcut_status = ttk.Label(parent, text="", foreground="#0a7d00")
+        self.shortcut_status = ttk.Label(parent, text="", foreground=P["good"])
         self.shortcut_status.grid(row=10, column=0, columnspan=2, sticky="w", pady=(6, 0))
 
     def _create_shortcut(self):
         try:
             path = create_desktop_shortcut()
             self.shortcut_status.config(
-                text=f"Shortcut created: {os.path.basename(path)}", foreground="#0a7d00"
+                text=f"Shortcut created: {os.path.basename(path)}", foreground=P["good"]
             )
         except Exception as exc:
             self.shortcut_status.config(
-                text="Failed to create shortcut.", foreground="#b00020"
+                text="Failed to create shortcut.", foreground=P["bad"]
             )
             messagebox.showerror("Shortcut error", str(exc))
 
@@ -331,7 +425,7 @@ class App(tk.Tk):
         ttk.Label(
             parent,
             text="How to use this tool",
-            font=("Segoe UI", 11, "bold"),
+            style="Heading.TLabel",
         ).grid(row=0, column=0, sticky="w")
 
         lines = [
@@ -366,10 +460,10 @@ class App(tk.Tk):
     def refresh(self):
         for tweak_id, var in self.vars.items():
             var.set(is_enabled(tweak_id))
-        self.set_status("Registry state loaded.", "#555")
+        self.set_status("Registry state loaded.", P["muted"])
 
-    def set_status(self, text, color="#0a7d00"):
-        self.status.config(text=text, foreground=color)
+    def set_status(self, text, color=None):
+        self.status.config(text=text, foreground=color or P["good"])
 
     def toggle(self, tweak_id):
         if self._busy:
@@ -383,7 +477,7 @@ class App(tk.Tk):
             self.set_status(f'"{TWEAKS[tweak_id]["title"]}" {state}.')
         except OSError as exc:
             self.vars[tweak_id].set(is_enabled(tweak_id))
-            self.set_status("Failed to update registry.", "#b00020")
+            self.set_status("Failed to update registry.", P["bad"])
             messagebox.showerror("Registry error", str(exc))
         finally:
             self._busy = False
